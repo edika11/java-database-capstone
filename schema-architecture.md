@@ -1,14 +1,11 @@
-**Architecture summary**
+## 1. Architecture summary
 
 This Spring Boot application follows a layered architecture combining both MVC and REST approaches. The AdminDashboard and DoctorDashboard interfaces use Thymeleaf controllers to render views, while other modules like Appointments, PatientDashboard, and PatientRecord communicate via REST controllers through a JSON API. Regardless of whether a request originates from a Thymeleaf or REST controller, it is routed through a central Service Layer, which contains the core business logic of the application.
 
 The service layer interacts with two different persistence mechanisms. For relational data such as patients, doctors, appointments, and admin users, it leverages MySQL Repositories backed by JPA entities. These repositories access the MySQL database, with each entity mapped to its corresponding model (Patient, Doctor, Appointment, Admin). For non-relational data, specifically prescriptions, the application uses a MongoDB Repository connected to a MongoDB database, with data modeled as documents. This hybrid approach allows the system to efficiently handle structured relational data alongside flexible document-based data storage.
 
 
-
--------------------------------------------------------------------
-
-**Numbered flow of data and control**
+## 2. Numbered flow of data and control
 
 1. A user accesses either a dashboard (AdminDashboard or DoctorDashboard) through the UI or a REST module (Appointments, PatientDashboard, PatientRecord) via a JSON API.
 2. The request is routed to the appropriate controller: Thymeleaf Controllers handle dashboard pages, while REST Controllers handle API calls.

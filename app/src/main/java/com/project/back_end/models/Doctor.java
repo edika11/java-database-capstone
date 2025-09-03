@@ -1,65 +1,226 @@
 package com.project.back_end.models;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+
+
+@Entity
+@Table(name = "doctors")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Doctor {
 
-// @Entity annotation:
-//    - Marks the class as a JPA entity, meaning it represents a table in the database.
-//    - Required for persistence frameworks (e.g., Hibernate) to map the class to a database table.
 
-// 1. 'id' field:
-//    - Type: private Long
-//    - Description:
-//      - Represents the unique identifier for each doctor.
-//      - The @Id annotation marks it as the primary key.
-//      - The @GeneratedValue(strategy = GenerationType.IDENTITY) annotation auto-generates the ID value when a new record is inserted into the database.
+    // Represents the unique identifier for each doctor
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-// 2. 'name' field:
-//    - Type: private String
-//    - Description:
-//      - Represents the doctor's name.
-//      - The @NotNull annotation ensures that the doctor's name is required.
-//      - The @Size(min = 3, max = 100) annotation ensures that the name length is between 3 and 100 characters. 
-//      - Provides validation for correct input and user experience.
+    //  To expose public IDs and avoid leaking of auto-increment IDs.
+    @Column(name = "uuid", unique = true, nullable = false, length = 36)
+    private String uuid;
+
+    // Represents the doctor's name
+    @NotBlank(message = "Name is required")
+    @Size(min = 3, max = 100, message = "the name length is between 3 and 100 characters")
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
 
 
-// 3. 'specialty' field:
-//    - Type: private String
-//    - Description:
-//      - Represents the medical specialty of the doctor.
-//      - The @NotNull annotation ensures that a specialty must be provided.
-//      - The @Size(min = 3, max = 50) annotation ensures that the specialty name is between 3 and 50 characters long.
+    // Represents the medical specialty of the doctor
+    @NotBlank(message = "Specialty is required")
+    @Size(min = 3, max = 50, message = "the specialty name is between 3 and 50 characters long")
+    @Column(name = "specialty", nullable = false, length = 50)
+    private String specialty;
 
-// 4. 'email' field:
-//    - Type: private String
-//    - Description:
-//      - Represents the doctor's email address.
-//      - The @NotNull annotation ensures that an email address is required.
-//      - The @Email annotation validates that the email address follows a valid email format (e.g., doctor@example.com).
+    // Represents the doctor's email address
+    @NotBlank(message = "email is required")
+    @Email(message = "email should have a valid format like doctor@example.com")
+    @Column(name = "email", nullable = false, unique = true, length = 100)
+    private String email;
 
-// 5. 'password' field:
-//    - Type: private String
-//    - Description:
-//      - Represents the doctor's password for login authentication.
-//      - The @NotNull annotation ensures that a password must be provided.
-//      - The @Size(min = 6) annotation ensures that the password must be at least 6 characters long.
-//      - The @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) annotation ensures that the password is not serialized in the response (hidden from the frontend).
+    // Represents the doctor's password for login authentication
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "The password must be at least 6 characters long")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Column(name = "password", nullable = false)
+    private String password;
 
-// 6. 'phone' field:
-//    - Type: private String
-//    - Description:
-//      - Represents the doctor's phone number.
-//      - The @NotNull annotation ensures that a phone number must be provided.
-//      - The @Pattern(regexp = "^[0-9]{10}$") annotation validates that the phone number must be exactly 10 digits long.
+    // Represents the doctor's phone number
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^[0-9]{10}$", message = "The phone number must be exactly 10 digits long")
+    @Column(name = "phone", nullable = false, length = 10)
+    private String phone;
 
-// 7. 'availableTimes' field:
-//    - Type: private List<String>
-//    - Description:
-//      - Represents the available times for the doctor in a list of time slots.
-//      - Each time slot is represented as a string (e.g., "09:00-10:00", "10:00-11:00").
-//      - The @ElementCollection annotation ensures that the list of time slots is stored as a separate collection in the database.
+    // For a soft delete
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted;
 
-// 8. Getters and Setters:
-//    - Standard getter and setter methods are provided for all fields: id, name, specialty, email, password, phone, and availableTimes.
+    // Timestamp fields
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    // Represents years of experience
+    @Min(value = 0, message = "Years of experience cannot be negative")
+    @Max(value = 60, message = "Years of experience cannot exceed 60")
+    @Column(name = "years_of_experience")
+    private Integer yearsOfExperience;
+
+    // Represents clinic address
+    @Size(max = 255, message = "Clinic address cannot exceed 255 characters")
+    @Column(name = "clinic_address", length = 255)
+    private String clinicAddress;
+
+    //  Description:
+    //      - Represents the available times for the doctor in a list of time slots
+    //      - Each time slot is represented as a string (e.g., "09:00-10:00", "10:00-11:00")
+    @ElementCollection
+    @CollectionTable(name = "doctor_availabilities", joinColumns = @JoinColumn(name = "doctor_id"))
+    @Column(name = "time_slot", length = 20)
+    private List<String> availableTimes;
+
+    // Relationships with other entities
+    @OneToMany(mappedBy = "doctor", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    private List<Appointment> appointments;
+
+    // Constructors
+    public Doctor() {
+        this.uuid = UUID.randomUUID().toString();
+        this.isDeleted = false;
+    }
+
+    public Doctor(String name, String specialty, String email, String password, String phone) {
+        this();
+        this.name = name;
+        this.specialty = specialty;
+        this.email = email;
+        this.password = password;
+        this.phone = phone;
+    }
+
+    public Doctor(String name, String specialty, String email, String password, String phone, Integer yearsOfExperience, String clinicAddress) {
+        this(name, specialty, email, password, phone);
+        this.yearsOfExperience = yearsOfExperience;
+        this.clinicAddress = clinicAddress;
+    }
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getSpecialty() {
+        return specialty;
+    }
+
+    public void setSpecialty(String specialty) {
+        this.specialty = specialty;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
+    public Boolean getDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public Integer getYearsOfExperience() {
+        return yearsOfExperience;
+    }
+
+    public void setYearsOfExperience(Integer yearsOfExperience) {
+        this.yearsOfExperience = yearsOfExperience;
+    }
+
+    public String getClinicAddress() {
+        return clinicAddress;
+    }
+
+    public void setClinicAddress(String clinicAddress) {
+        this.clinicAddress = clinicAddress;
+    }
+
+    public List<String> getAvailableTimes() {
+        return availableTimes;
+    }
+
+    public void setAvailableTimes(List<String> availableTimes) {
+        this.availableTimes = availableTimes;
+    }
+
+    public List<Appointment> getAppointments() {
+        return appointments;
+    }
+
+    public void setAppointments(List<Appointment> appointments) {
+        this.appointments = appointments;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 }
 

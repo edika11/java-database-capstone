@@ -15,7 +15,7 @@ import java.util.UUID;
 
 
 @Entity
-@Table(name = "doctors")
+@Table(name = "doctor")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Doctor {
 
@@ -57,8 +57,8 @@ public class Doctor {
 
     // Represents the doctor's phone number
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^[0-9]{10}$", message = "The phone number must be exactly 10 digits long")
-    @Column(name = "phone", nullable = false, length = 10)
+    @Pattern(regexp = "^[0-9]{3}-[0-9]{3}-[0-9]{4}$", message = "The phone number should have this format XXX-XXX-XXXX")
+    @Column(name = "phone", nullable = false, length = 15)
     private String phone;
 
     // For a soft delete
@@ -89,8 +89,8 @@ public class Doctor {
     //      - Represents the available times for the doctor in a list of time slots
     //      - Each time slot is represented as a string (e.g., "09:00-10:00", "10:00-11:00")
     @ElementCollection
-    @CollectionTable(name = "doctor_availabilities", joinColumns = @JoinColumn(name = "doctor_id"))
-    @Column(name = "time_slot", length = 20)
+    @CollectionTable(name = "doctor_available_times", joinColumns = @JoinColumn(name = "doctor_id"))
+    @Column(name = "available_times", length = 20)
     private List<String> availableTimes;
 
     // Relationships with other entities

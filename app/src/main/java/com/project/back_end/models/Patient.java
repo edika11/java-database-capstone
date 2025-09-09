@@ -15,7 +15,7 @@ import java.util.UUID;
 
 
 @Entity
-@Table(name = "patients")
+@Table(name = "patient")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Patient {
 
@@ -57,8 +57,8 @@ public class Patient {
 
     // Represents the patient's phone number
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^[0-9]{10}$", message = "The phone number must be exactly 10 digits long")
-    @Column(name = "phone", nullable = false, length = 10)
+    @Pattern(regexp = "^[0-9]{3}-[0-9]{3}-[0-9]{4}$", message = "The phone number should have this format XXX-XXX-XXXX")
+    @Column(name = "phone", nullable = false, length = 15)
     private String phone;
 
     // Represents the patient's address
